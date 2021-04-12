@@ -90,6 +90,10 @@ pub struct Opts {
     #[structopt(short, long)]
     pub greppable: bool,
 
+    /// Same as Greppable mode. Outputs hostnames with the ports. No Nmap. Useful for grep or outputting to a file.
+    #[structopt(short, long)]
+    pub hosts_greppable: bool,
+
     /// Accessible mode. Turns off features which negatively affect screen readers.
     #[structopt(long)]
     pub accessible: bool,
@@ -173,7 +177,7 @@ impl Opts {
         }
 
         merge_required!(
-            addresses, greppable, accessible, batch_size, timeout, tries, scan_order, scripts,
+            addresses, greppable, hosts_greppable, accessible, batch_size, timeout, tries, scan_order, scripts,
             command
         );
     }
@@ -212,6 +216,7 @@ pub struct Config {
     ports: Option<HashMap<String, u16>>,
     range: Option<PortRange>,
     greppable: Option<bool>,
+    hosts_greppable: Option<bool>,
     accessible: Option<bool>,
     batch_size: Option<u16>,
     timeout: Option<u32>,
@@ -271,6 +276,7 @@ mod tests {
                 ports: None,
                 range: None,
                 greppable: Some(true),
+                hosts_greppable: Some(false),
                 batch_size: Some(25_000),
                 timeout: Some(1_000),
                 tries: Some(1),
@@ -290,6 +296,7 @@ mod tests {
                 ports: None,
                 range: None,
                 greppable: true,
+                hosts_greppable: false,
                 batch_size: 0,
                 timeout: 0,
                 tries: 0,
@@ -313,6 +320,7 @@ mod tests {
 
         assert_eq!(opts.addresses, vec![] as Vec<String>);
         assert_eq!(opts.greppable, true);
+        assert_eq!(opts.hosts_greppable, false);
         assert_eq!(opts.accessible, false);
         assert_eq!(opts.timeout, 0);
         assert_eq!(opts.command, vec![] as Vec<String>);
@@ -328,6 +336,7 @@ mod tests {
 
         assert_eq!(opts.addresses, config.addresses.unwrap());
         assert_eq!(opts.greppable, config.greppable.unwrap());
+        assert_eq!(opts.hosts_greppable, config.hosts_greppable.unwrap());
         assert_eq!(opts.timeout, config.timeout.unwrap());
         assert_eq!(opts.command, config.command.unwrap());
         assert_eq!(opts.accessible, config.accessible.unwrap());

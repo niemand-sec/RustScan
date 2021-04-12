@@ -29,6 +29,7 @@ pub struct Scanner {
     timeout: Duration,
     tries: NonZeroU8,
     greppable: bool,
+    hosts_greppable: bool,
     port_strategy: PortStrategy,
     accessible: bool,
 }
@@ -40,6 +41,7 @@ impl Scanner {
         timeout: Duration,
         tries: u8,
         greppable: bool,
+        hosts_greppable: bool,
         port_strategy: PortStrategy,
         accessible: bool,
     ) -> Self {
@@ -48,6 +50,7 @@ impl Scanner {
             timeout,
             tries: NonZeroU8::new(std::cmp::max(tries, 1)).unwrap(),
             greppable,
+            hosts_greppable,
             port_strategy,
             ips: ips.iter().map(ToOwned::to_owned).collect(),
             accessible,
@@ -123,7 +126,7 @@ impl Scanner {
                     if let Err(e) = x.shutdown(Shutdown::Both) {
                         debug!("Shutdown stream error {}", &e);
                     }
-                    if !self.greppable {
+                    if !self.greppable && !self.hosts_greppable {
                         if self.accessible {
                             println!("Open {}", socket.to_string());
                         } else {
