@@ -250,7 +250,9 @@ fn parse_addresses(input: &Opts) -> (Vec<IpAddr>, Vec<String>) {
         Resolver::new(ResolverConfig::cloudflare_tls(), ResolverOpts::default()).unwrap();
 
     for address in &input.addresses {
+        //println!("address:{}", address);
         let (parsed_ips, parsed_host) = parse_address(address, &backup_resolver);
+        //println!("parsed_ips:{:?}, parsed_host:{}", parsed_ips, parsed_host);
         if !parsed_ips.is_empty() {
             ips.extend(parsed_ips);
             hosts.push(parsed_host);
@@ -273,9 +275,15 @@ fn parse_addresses(input: &Opts) -> (Vec<IpAddr>, Vec<String>) {
             continue;
         }
         if let Ok(z) = read_ips_from_file(file_path, &backup_resolver) {
+            // ISSUE:The problem is here, it returns more hostnames than IPs is one of the hostnames does not resolves
+            //println!("1z:{:?}", z);
             let (x,y) = z;
+            //println!("2z:{:?}", x);
             ips.extend(x);
+            //println!("3z:{:?}", y);
             hosts.extend(y);
+            
+            //println!("1-ips:{:?}, hosts:{:?}", ips, hosts);
         } else {
             warning!(
                 format!("Host {:?} could not be resolved.", file_path),
@@ -284,7 +292,7 @@ fn parse_addresses(input: &Opts) -> (Vec<IpAddr>, Vec<String>) {
             );
         }
     }
-
+    //println!("2-ips:{:?}, hosts:{:?}", ips, hosts);
     (ips, hosts)
 }
 
@@ -330,12 +338,21 @@ fn read_ips_from_file(
 
     let mut ips: Vec<std::net::IpAddr> = Vec::new();
     let mut hosts: Vec<std::string::String> = Vec::new();
-
+    //println!("TEST1");
     for address_line in reader.lines() {
         if let Ok(address) = address_line {
+            // println!("address_line:{}", address);
+            // ISSUE:bellow calling to parse_address, which returns incorrect cases when unresolved
             let (ip, host) = parse_address(&address, backup_resolver);
-            ips.extend(ip);
-            hosts.push(host);
+            //println!("ip:{:?}, host:{:?}", ip,host);
+            if ip.len() == 0 {
+                debug!("hostname does not resolves");
+
+            } else {
+                ips.extend(ip);
+                hosts.push(host);
+            }
+            
         } else {
             debug!("Line in file is not valid");
         }
@@ -546,7 +563,7 @@ mod tests {
         // Host file contains IP, Hosts, incorrect IPs, incorrect hosts
         let mut opts = Opts::default();
         opts.addresses = vec!["fixtures/empty_hosts.txt".to_owned()];
-        llet (ips,hosts) = parse_addresses(&opts);
+        let (ips,hosts) = parse_addresses(&opts);
         assert_eq!(ips.len(), 0);
     }
 
@@ -557,5 +574,14 @@ mod tests {
         opts.addresses = vec!["fixtures/naughty_string.txt".to_owned()];
         let (ips,hosts) = parse_addresses(&opts);
         assert_eq!(ips.len(), 0);
+    }
+
+    #[test]
+    fn parse_unresolvable_file() {
+        // Host file contains valid domains and one domain that does not resolves
+        let mut opts = Opts::default();
+        opts.addresses = vec!["fixtures/unresolvable_hosts.txt".to_owned()];
+        let (ips,hosts) = parse_addresses(&opts);
+        assert_eq!( (ips.len(), hosts.len() ), (10,10));
     }
 }

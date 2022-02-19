@@ -198,6 +198,7 @@ mod tests {
             Duration::from_millis(100),
             1,
             true,
+            true,
             strategy,
             true,
         );
@@ -220,6 +221,7 @@ mod tests {
             Duration::from_millis(100),
             1,
             true,
+            true,
             strategy,
             true,
         );
@@ -241,6 +243,7 @@ mod tests {
             Duration::from_millis(100),
             1,
             true,
+            true,
             strategy,
             true,
         );
@@ -260,6 +263,7 @@ mod tests {
             10,
             Duration::from_millis(100),
             1,
+            true,
             true,
             strategy,
             true,
@@ -283,6 +287,7 @@ mod tests {
             10,
             Duration::from_millis(100),
             1,
+            true,
             true,
             strategy,
             true,
